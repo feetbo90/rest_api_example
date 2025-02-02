@@ -4,15 +4,15 @@ import { User } from '../models/user';
 import generateToken from '../utils/generateToken';
 
 export const registerUser = async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
+  const { npm, password } = req.body;
 
-  if (!name || !email || !password) {
+  if (!npm || !password) {
     res.status(400).json({ message: 'All fields are required' });
   }
 
   try {
     // Cek apakah pengguna sudah ada
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ npm });
     if (userExists) {
       res.status(400).json({ message: 'User already exists' });
     }
@@ -22,8 +22,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
     // Buat pengguna baru
     const user = await User.create({
-      name,
-      email,
+      npm,
       password: hashedPassword,
     });
 
@@ -34,8 +33,7 @@ export const registerUser = async (req: Request, res: Response) => {
     // Kembalikan response dengan token
     res.status(201).json({
       _id: user._id,
-      name: user.name,
-      email: user.email,
+      npm: user.npm,
       token: generateToken(`${user._id}`),
     });
   } catch (error) {
@@ -48,20 +46,19 @@ export const registerUser = async (req: Request, res: Response) => {
   
 
 export const loginUser = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { npm, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ npm });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({
         _id: user._id,
-        name: user.name,
-        email: user.email,
+        npm: user.npm,
         token: generateToken(`${user._id}`),
       });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: 'Invalid npm or password' });
     }
   } catch (error) {
     if (error instanceof Error) {
